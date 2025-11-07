@@ -2,9 +2,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 
-from .database import Base, engine, get_db
-from .models import User
-from .auth import hash_password, verify_password, create_access_token
+from backend.database import Base, engine, get_db
+from backend.models import User
+from backend.auth import hash_password, verify_password, create_access_token
+
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -56,6 +58,8 @@ def signup(data: SignupInput, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(data: LoginInput, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
+    print("🧩 Incoming login attempt:", data.email, data.password)
+    print("🧩 Found user in DB:", user.email if user else None, "Hash:", user.password_hash if user else None)
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

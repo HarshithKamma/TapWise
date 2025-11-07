@@ -1,15 +1,17 @@
-// app/_layout.js
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 
-export default function RootLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* Home / landing */}
-      <Stack.Screen name="index" />
+export default function Layout() {
+  const router = useRouter();
 
-      {/* Auth screens */}
-      <Stack.Screen name="screens/signupscreen" />
-      <Stack.Screen name="screens/loginscreen" />
-    </Stack>
-  );
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await AsyncStorage.getItem("tapwise_token");
+      if (token) router.replace("/screens/homescreen");
+    };
+    checkAuth();
+  }, []);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

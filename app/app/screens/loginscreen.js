@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityInd
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
+const BASE_URL = "http://192.168.1.120:10000";
+
 export default function LoginScreen() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -13,30 +15,32 @@ export default function LoginScreen() {
       Alert.alert("Missing Fields", "Please enter both email and password.");
       return;
     }
+  
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:10000/login", {
+      const res = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+  
       const data = await res.json();
-
+  
       if (res.ok) {
-        // Save token locally
         await AsyncStorage.setItem("tapwise_token", data.token);
-        Alert.alert("Welcome back!", `Hi ${data.name || "User"}!`);
-        router.replace("/"); // go to home after login
+        await AsyncStorage.setItem("tapwise_user_name", data.name);
+        Alert.alert("Welcome back!", `Hi ${data.name}`);
+        router.replace("/screens/homescreen");
       } else {
         Alert.alert("Login Failed", data.detail || "Invalid credentials");
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to connect to server.");
+      Alert.alert("Error", "Could not connect to server");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <View style={styles.container}>
