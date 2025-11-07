@@ -1,13 +1,112 @@
-// app/screens/loginscreen.js
-import { View, Text, Button } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!form.email || !form.password) {
+      Alert.alert("Missing Fields", "Please enter both email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("http://127.0.0.1:10000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        // Save token locally
+        await AsyncStorage.setItem("tapwise_token", data.token);
+        Alert.alert("Welcome back!", `Hi ${data.name || "User"}!`);
+        router.replace("/"); // go to home after login
+      } else {
+        Alert.alert("Login Failed", data.detail || "Invalid credentials");
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Failed to connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ fontSize: 20 }}>Login Screen</Text>
-      <Button title="Back to Home" onPress={() => router.push("/")} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome Back to TapWise</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#999"
+        onChangeText={(v) => setForm({ ...form, email: v })}
+        value={form.email}
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#999"
+        secureTextEntry
+        onChangeText={(v) => setForm({ ...form, password: v })}
+        value={form.password}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push("/screens/signupscreen")}>
+        <Text style={styles.link}>Don’t have an account? Sign Up</Text>
+      </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#f4f6fa",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#0A2647",
+  },
+  input: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  button: {
+    backgroundColor: "#007AFF",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  link: {
+    marginTop: 16,
+    color: "#007AFF",
+    textAlign: "center",
+  },
+});
