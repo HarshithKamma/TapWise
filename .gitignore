@@ -1,0 +1,20 @@
+#MACOS
+.DS_Store
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+build/
+dist/
+
+# Python
+__pycache__/
+.venv/
+env/
+*.pyc
+*.sqlite*
+
+# IDEs
+.vscode/
+.idea/
